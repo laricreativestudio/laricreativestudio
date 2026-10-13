@@ -1,4 +1,4 @@
-# Lari Creative Studio — Website
+   # Lari Creative Studio — Website
 
 A full multi-page static site for Lari Creative Studio: a 10-service creative
 agency (branding, web, UI/UX, photography, video, social content, digital
