@@ -494,3 +494,77 @@ table.pricing-table th{ font-size: 11px; letter-spacing: 0.1em; text-transform: 
 
 .badge{ display: inline-block; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding: 4px 10px; background: var(--gold); color: var(--navy); }
 .badge.soft{ background: var(--stone); color: var(--graphite); }
+
+/* -------------------------------- Client onboarding (multi-step) -------------------------------- */
+.onb-page .site-header{ background: rgba(11,31,51,0.96); }
+.onb-shell{ padding-top: 150px; }
+.onb-head{ display: flex; gap: 28px; align-items: flex-start; margin-bottom: 44px; }
+.onb-head .brand-mark{ flex-shrink: 0; box-shadow: 0 0 0 1px var(--gold); }
+.onb-head h1{ font-size: clamp(34px, 4.6vw, 56px); margin-bottom: 14px; color: var(--navy); }
+@media (max-width: 640px){ .onb-head{ flex-direction: column; gap: 18px; } .onb-shell{ padding-top: 120px; } }
+
+.onb-progress{ height: 4px; background: var(--stone); border-radius: 999px; overflow: hidden; }
+.onb-progress-bar{ height: 100%; width: 0; background: var(--gold); transition: width 400ms var(--ease); }
+.onb-progress-text{ font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--muted-on-light); margin: 10px 0 36px; }
+
+.onb-layout{ display: grid; grid-template-columns: 270px 1fr; gap: 48px; align-items: start; }
+@media (max-width: 900px){ .onb-layout{ grid-template-columns: 1fr; gap: 24px; } }
+
+.onb-nav{ position: sticky; top: 100px; background: var(--navy); color: var(--ivory); padding: 26px 18px; border-radius: var(--radius); }
+.onb-nav-part + .onb-nav-part{ margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line-on-dark); }
+.onb-nav-label{ display: block; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; color: var(--gold-bright); margin: 0 8px 10px; }
+.onb-nav ol{ list-style: none; margin: 0; padding: 0; }
+.onb-nav-btn{ display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 8px; background: none; border: 0; color: var(--muted-on-dark); font: inherit; font-size: 14px; text-align: left; cursor: pointer; border-radius: var(--radius); transition: color var(--dur) var(--ease), background var(--dur) var(--ease); }
+.onb-nav-btn:hover{ color: var(--ivory); }
+.onb-nav-num{ display: inline-grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border: 1px solid var(--line-on-dark); border-radius: 50%; font-size: 11px; font-weight: 700; }
+.onb-nav-btn.is-done .onb-nav-num{ background: rgba(200,160,77,0.18); border-color: var(--gold); color: var(--gold-bright); }
+.onb-nav-btn.is-current{ color: var(--ivory); background: var(--navy-3); }
+.onb-nav-btn.is-current .onb-nav-num{ background: var(--gold); border-color: var(--gold); color: var(--navy); }
+@media (max-width: 900px){
+  .onb-nav{ position: static; display: flex; gap: 6px; overflow-x: auto; padding: 12px; }
+  .onb-nav-part, .onb-nav-part + .onb-nav-part{ margin: 0; padding: 0; border: 0; }
+  .onb-nav-label{ display: none; }
+  .onb-nav ol{ display: flex; gap: 6px; }
+  .onb-nav-btn{ white-space: nowrap; font-size: 0; gap: 0; padding: 4px; }
+  .onb-nav-btn.is-current{ font-size: 13px; gap: 10px; padding: 4px 12px 4px 4px; }
+}
+
+.onb-main{ background: #fff; border: 1px solid var(--line-on-light); padding: 44px; min-width: 0; }
+@media (max-width: 640px){ .onb-main{ padding: 26px 20px; } }
+.onb-step h2{ color: var(--navy); margin-bottom: 8px; }
+.onb-step .lede{ margin-bottom: 32px; font-size: 16px; }
+.onb-step:not([hidden]){ animation: hero-rise 420ms var(--ease) both; }
+.req{ color: var(--gold); }
+
+fieldset.onb-group{ border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset.onb-group legend{ font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--muted-on-light); padding: 0; margin-bottom: 10px; }
+.onb-choices{ display: flex; flex-wrap: wrap; gap: 10px; }
+.onb-choice{ position: relative; cursor: pointer; }
+.onb-choice input{ position: absolute; opacity: 0; pointer-events: none; }
+.onb-choice span{ display: inline-block; padding: 10px 16px; border: 1px solid var(--line-on-light); border-radius: 999px; font-size: 14px; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); }
+.onb-choice:hover span{ border-color: var(--gold); }
+.onb-choice input:checked + span{ background: var(--navy); border-color: var(--navy); color: var(--ivory); }
+.onb-choice input:focus-visible + span{ outline: 2px solid var(--gold); outline-offset: 2px; }
+.onb-group.has-error .onb-choice span{ border-color: var(--danger); }
+.onb-consent{ font-size: 14.5px; color: var(--graphite); padding: 14px 16px; border: 1px solid var(--line-on-light); border-radius: var(--radius); cursor: pointer; }
+.onb-consent input{ accent-color: var(--navy); width: 16px; height: 16px; flex-shrink: 0; }
+.field.has-error .onb-consent{ border-color: var(--danger); }
+.field input[type="file"]{ padding: 11px; background: var(--ivory); }
+
+.onb-actions{ display: flex; align-items: center; gap: 14px; margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--line-on-light); }
+.onb-save-note{ flex: 1; text-align: center; font-size: 12px; color: var(--muted-on-light); }
+@media (max-width: 560px){ .onb-save-note{ display: none; } .onb-actions .btn-primary{ margin-left: auto; } }
+.onb-error{ margin-top: 24px; padding: 14px 16px; border: 1px solid var(--danger); color: var(--danger); font-size: 14px; }
+
+.onb-review-block{ border: 1px solid var(--line-on-light); margin-bottom: 18px; }
+.onb-review-head{ display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; background: var(--ivory-dim); }
+.onb-review-head h4{ margin: 0; font-size: 15px; color: var(--navy); }
+.onb-review-head small{ display: block; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.onb-review dl{ margin: 0; padding: 6px 18px 12px; display: grid; grid-template-columns: minmax(140px, 38%) 1fr; }
+.onb-review dt, .onb-review dd{ padding: 9px 0; border-bottom: 1px solid var(--line-on-light); font-size: 14px; margin: 0; }
+.onb-review dt{ color: var(--muted-on-light); padding-right: 16px; }
+.onb-review dd{ white-space: pre-wrap; word-break: break-word; }
+.onb-review dd.is-empty{ color: var(--muted-on-light); font-style: italic; }
+@media (max-width: 560px){ .onb-review dl{ grid-template-columns: 1fr; } .onb-review dt{ border-bottom: 0; padding-bottom: 0; } }
+.onb-done h2{ color: var(--navy); }
+.onb-layout.is-complete{ grid-template-columns: 1fr; }

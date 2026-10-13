@@ -125,6 +125,189 @@
   });
 
   /* ---------------------------------------------------------------- */
+  /* Client onboarding — multi-step Part A + Part B, Netlify Forms    */
+  /* ---------------------------------------------------------------- */
+  var onbForm = document.querySelector("[data-onb-form]");
+  if (onbForm) {
+    var ONB_KEY = "lari_onboarding_v1";
+    var steps = Array.prototype.slice.call(onbForm.querySelectorAll(".onb-step"));
+    var navBtns = Array.prototype.slice.call(document.querySelectorAll(".onb-nav-btn"));
+    var prevBtn = onbForm.querySelector("[data-onb-prev]");
+    var nextBtn = onbForm.querySelector("[data-onb-next]");
+    var submitBtn = onbForm.querySelector("[data-onb-submit]");
+    var errorBox = onbForm.querySelector("[data-onb-error]");
+    var bar = document.querySelector("[data-onb-bar]");
+    var progressText = document.querySelector("[data-onb-progress-text]");
+    var total = steps.length;
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(ONB_KEY)) || {}; } catch (e) { saved = {}; }
+    var state = saved.values || {};
+    var visited = saved.visited || [1];
+    var current = 1;
+
+    function persist() {
+      try { localStorage.setItem(ONB_KEY, JSON.stringify({ values: state, visited: visited, step: current })); } catch (e) {}
+    }
+
+    function readField(el) {
+      if (el.type === "file" || el.name === "bot-field" || el.name === "form-name") return;
+      if (el.type === "checkbox" && el.closest(".onb-group")) {
+        state[el.name] = Array.prototype.slice.call(onbForm.querySelectorAll('input[name="' + el.name + '"]:checked')).map(function (i) { return i.value; });
+      } else if (el.type === "checkbox") {
+        state[el.name] = el.checked ? el.value : "";
+      } else if (el.type === "radio") {
+        if (el.checked) state[el.name] = el.value;
+      } else {
+        state[el.name] = el.value;
+      }
+    }
+
+    // Restore saved answers
+    Array.prototype.forEach.call(onbForm.elements, function (el) {
+      if (!el.name || !(el.name in state) || el.type === "file") return;
+      var v = state[el.name];
+      if (el.type === "checkbox" || el.type === "radio") {
+        el.checked = Array.isArray(v) ? v.indexOf(el.value) > -1 : v === el.value;
+      } else { el.value = v; }
+    });
+
+    onbForm.addEventListener("input", function (e) { if (e.target.name) { readField(e.target); clearError(e.target); persist(); } });
+    onbForm.addEventListener("change", function (e) { if (e.target.name) { readField(e.target); clearError(e.target); persist(); } });
+
+    function clearError(el) {
+      var wrap = el.closest(".field");
+      if (wrap) wrap.classList.remove("has-error");
+    }
+
+    function validateStep(n) {
+      var step = steps[n - 1], firstBad = null;
+      step.querySelectorAll(".field").forEach(function (wrap) {
+        var bad = false;
+        if (wrap.hasAttribute("data-required-group")) {
+          bad = !wrap.querySelector("input:checked");
+        } else {
+          var el = wrap.querySelector("input[required], select[required], textarea[required]");
+          if (el) bad = el.type === "checkbox" ? !el.checked : (!el.value.trim() || !el.checkValidity());
+          var opt = wrap.querySelector("input[type=email]:not([required]), input[type=url]:not([required])");
+          if (opt && opt.value && !opt.checkValidity()) bad = true;
+          var file = wrap.querySelector("input[type=file]");
+          if (file && file.files[0] && file.files[0].size > 8 * 1024 * 1024) bad = true;
+        }
+        wrap.classList.toggle("has-error", bad);
+        if (bad && !firstBad) firstBad = wrap;
+      });
+      return firstBad;
+    }
+
+    function isStepComplete(n) {
+      var ok = true;
+      steps[n - 1].querySelectorAll("[required]").forEach(function (el) {
+        if (el.type === "checkbox" ? !el.checked : !el.value.trim()) ok = false;
+      });
+      steps[n - 1].querySelectorAll("[data-required-group]").forEach(function (g) { if (!g.querySelector("input:checked")) ok = false; });
+      return ok;
+    }
+
+    function escHtml(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+    function renderReview() {
+      var out = "";
+      steps.slice(0, -1).forEach(function (step, i) {
+        var rows = "";
+        step.querySelectorAll(".field").forEach(function (wrap) {
+          var labelEl = wrap.querySelector("legend, label");
+          var label = labelEl ? labelEl.textContent.replace(/\*\s*$/, "").trim() : "";
+          var el = wrap.querySelector("input, select, textarea");
+          if (!el) return;
+          var v;
+          if (el.type === "file") v = el.files[0] ? el.files[0].name : "";
+          else if (wrap.classList.contains("onb-group")) v = [].concat(state[el.name] || []).join(", ");
+          else if (el.type === "checkbox") { v = el.checked ? "Agreed" : ""; label = label.length > 70 ? label.slice(0, 70) + "…" : label; }
+          else v = el.value;
+          rows += "<dt>" + escHtml(label) + "</dt><dd" + (v ? "" : ' class="is-empty"') + ">" + (v ? escHtml(v) : "Not provided") + "</dd>";
+        });
+        out += '<div class="onb-review-block"><div class="onb-review-head"><div><small>' + escHtml(step.getAttribute("data-part")) + "</small><h4>" + escHtml(step.getAttribute("data-step-title")) + '</h4></div><button type="button" class="btn btn-ghost btn-sm" data-goto="' + (i + 1) + '">Edit</button></div><dl>' + rows + "</dl></div>";
+      });
+      onbForm.querySelector("[data-onb-review]").innerHTML = out;
+    }
+
+    function go(n, focus) {
+      n = Math.max(1, Math.min(total, n));
+      current = n;
+      if (visited.indexOf(n) === -1) visited.push(n);
+      steps.forEach(function (s, i) { s.hidden = i !== n - 1; });
+      navBtns.forEach(function (b) {
+        var t = +b.getAttribute("data-goto");
+        b.classList.toggle("is-current", t === n);
+        b.classList.toggle("is-done", t !== n && t < total && visited.indexOf(t) > -1 && isStepComplete(t));
+        if (t === n) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+      });
+      prevBtn.style.visibility = n === 1 ? "hidden" : "visible";
+      nextBtn.hidden = n === total;
+      submitBtn.hidden = n !== total;
+      errorBox.hidden = true;
+      if (n === total) renderReview();
+      var pct = Math.round(((n - 1) / (total - 1)) * 100);
+      bar.style.width = pct + "%";
+      progressText.textContent = "Step " + n + " of " + total + " — " + steps[n - 1].getAttribute("data-step-title") + " · " + pct + "% complete";
+      if (location.hash !== "#step-" + n) history.replaceState(null, "", "#step-" + n);
+      persist();
+      if (focus !== false) {
+        var top = document.querySelector(".onb-progress").getBoundingClientRect().top + window.scrollY - 110;
+        if (window.scrollY > top) window.scrollTo({ top: top, behavior: "smooth" });
+        var h = steps[n - 1].querySelector("h2"); h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true });
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-goto]");
+      if (t && document.querySelector(".onb-layout").contains(t)) { e.preventDefault(); go(+t.getAttribute("data-goto")); }
+    });
+    prevBtn.addEventListener("click", function () { go(current - 1); });
+    nextBtn.addEventListener("click", function () {
+      var bad = validateStep(current);
+      if (bad) { var f = bad.querySelector("input, select, textarea"); if (f) f.focus(); bad.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+      go(current + 1);
+    });
+
+    onbForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      for (var i = 1; i < total; i++) {
+        if (validateStep(i)) {
+          go(i);
+          errorBox.textContent = "A few required answers are missing in \"" + steps[i - 1].getAttribute("data-step-title") + "\". They're highlighted below.";
+          errorBox.hidden = false;
+          return;
+        }
+      }
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting…";
+      fetch("/", { method: "POST", body: new FormData(onbForm) })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          try { localStorage.removeItem(ONB_KEY); } catch (err) {}
+          history.replaceState(null, "", location.pathname);
+          document.querySelector(".onb-layout").classList.add("is-complete");
+          document.querySelector(".onb-nav").hidden = true;
+          onbForm.hidden = true;
+          document.querySelector("[data-onb-done]").hidden = false;
+          bar.style.width = "100%";
+          progressText.textContent = "Onboarding complete";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        })
+        .catch(function () {
+          errorBox.textContent = "Something went wrong sending your onboarding. Please try again, or email us if it keeps happening.";
+          errorBox.hidden = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Onboarding";
+        });
+    });
+
+    var fromHash = parseInt((location.hash.match(/^#step-(\d+)$/) || [])[1], 10);
+    go(fromHash || saved.step || 1, false);
+  }
+
+  /* ---------------------------------------------------------------- */
   /* LARI ACADEMY — front-end-only auth + LMS demo, backed by          */
   /* localStorage. No real backend: see README for what a production   */
   /* build needs (Supabase/Firebase/Auth0 + a database).                */
