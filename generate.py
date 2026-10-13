@@ -10,7 +10,7 @@ from data import (
     BRAND, SERVICES, SERVICES_BY_SLUG, BUNDLES, RETAINER_TERMS, PREMIUM_OPTIONS,
     COURSES, COURSES_BY_SLUG, GUIDE_BUNDLES, WORK_PROJECTS, WORK_BY_SLUG,
     JOURNAL_ARTICLES, JOURNAL_BY_SLUG, FAQS, ACADEMY_FAQS,
-    KEY_DIFFERENTIATORS, FIVE_YEAR_ROADMAP, FOUNDER,
+    KEY_DIFFERENTIATORS, FIVE_YEAR_ROADMAP, FOUNDER, ONBOARDING_PARTS,
 )
 
 OUT = os.path.join(os.path.dirname(__file__), "site")
@@ -1530,6 +1530,121 @@ def build_contact():
 
 
 # ---------------------------------------------------------------------------
+# CLIENT ONBOARDING (unlisted — Part A + Part B as one multi-step flow)
+# ---------------------------------------------------------------------------
+
+def _onb_field(f):
+    name, label, ftype, required, opts, full = f
+    if opts == "__SERVICES__":
+        opts = [s["name"] for s in SERVICES]
+    req = " required" if required else ""
+    star = ' <span class="req" aria-hidden="true">*</span>' if required else ""
+    cls = "field full" if full or ftype in ("checkboxes", "consent", "textarea") else "field"
+    fid = f"onb-{name}"
+    err = '<span class="field-error">Please complete this field.</span>'
+    if ftype == "consent":
+        return f'<div class="{cls}"><label class="checkbox-row onb-consent" for="{fid}"><input id="{fid}" type="checkbox" name="{name}" value="Yes"{req}><span>{esc(label)}{star}</span></label>{err}</div>'
+    if ftype in ("checkboxes", "radios"):
+        itype = "checkbox" if ftype == "checkboxes" else "radio"
+        group = "".join(
+            f'<label class="onb-choice"><input type="{itype}" name="{name}" value="{esc(o)}"><span>{esc(o)}</span></label>'
+            for o in opts)
+        data_req = " data-required-group" if required else ""
+        return f'<fieldset class="{cls} onb-group"{data_req}><legend>{esc(label)}{star}</legend><div class="onb-choices">{group}</div>{err}</fieldset>'
+    lab = f'<label for="{fid}">{esc(label)}{star}</label>'
+    if ftype == "select":
+        options = '<option value="">Select…</option>' + "".join(f"<option>{esc(o)}</option>" for o in opts)
+        ctrl = f'<select id="{fid}" name="{name}"{req}>{options}</select>'
+    elif ftype == "textarea":
+        ph = f' placeholder="{esc(opts)}"' if opts else ""
+        ctrl = f'<textarea id="{fid}" name="{name}"{ph}{req}></textarea>'
+    elif ftype == "file":
+        ctrl = f'<input id="{fid}" name="{name}" type="file" accept=".pdf,.png,.jpg,.jpeg,.svg,.ai,.doc,.docx,.zip">'
+    else:
+        ph = f' placeholder="{esc(opts)}"' if opts else ""
+        ctrl = f'<input id="{fid}" name="{name}" type="{ftype}"{ph}{req}>'
+    return f'<div class="{cls}">{lab}{ctrl}{err}</div>'
+
+
+def build_onboarding():
+    depth = 1
+    r = R(depth)
+    total = sum(len(p["steps"]) for p in ONBOARDING_PARTS) + 1  # + review step
+
+    nav, panels, n = [], [], 0
+    for part in ONBOARDING_PARTS:
+        items = []
+        for i, st in enumerate(part["steps"], 1):
+            n += 1
+            items.append(f'<li><button type="button" class="onb-nav-btn" data-goto="{n}"><span class="onb-nav-num">{part["key"]}{i}</span>{esc(st["title"])}</button></li>')
+            fields = "".join(_onb_field(f) for f in st["fields"])
+            panels.append(f'''
+          <section class="onb-step" data-step="{n}" data-step-title="{esc(st["title"])}" data-part="{esc(part["title"])}" hidden>
+            <span class="eyebrow">{esc(part["title"])} &middot; Step {n} of {total}</span>
+            <h2>{esc(st["title"])}</h2>
+            <p class="lede">{esc(st["intro"])}</p>
+            <div class="form-grid">{fields}</div>
+          </section>''')
+        nav.append(f'<div class="onb-nav-part"><span class="onb-nav-label">{esc(part["title"])}</span><ol>{"".join(items)}</ol></div>')
+    nav.append(f'<div class="onb-nav-part"><span class="onb-nav-label">Finish</span><ol><li><button type="button" class="onb-nav-btn" data-goto="{total}"><span class="onb-nav-num">&#10003;</span>Review &amp; Submit</button></li></ol></div>')
+    panels.append(f'''
+          <section class="onb-step" data-step="{total}" data-step-title="Review &amp; Submit" hidden>
+            <span class="eyebrow">Finish &middot; Step {total} of {total}</span>
+            <h2>Review &amp; Submit</h2>
+            <p class="lede">Check your answers. Use "Edit" to jump back to any section.</p>
+            <div class="onb-review" data-onb-review></div>
+          </section>''')
+
+    body = f'''
+    <section class="onb-shell">
+      <div class="container">
+        <header class="onb-head">
+          {logo_img(r, 72)}
+          <div>
+            <span class="eyebrow">Client Onboarding</span>
+            <h1>Welcome to {esc(BRAND["name"])}.</h1>
+            <p class="lede">One guided process covering Part A (your client profile) and Part B (your project brief &amp; agreement). It takes about 10–15 minutes, and your progress is saved in this browser so you can return at any time.</p>
+          </div>
+        </header>
+
+        <div class="onb-progress" aria-hidden="true"><div class="onb-progress-bar" data-onb-bar></div></div>
+        <p class="onb-progress-text" data-onb-progress-text aria-live="polite"></p>
+
+        <div class="onb-layout">
+          <nav class="onb-nav" aria-label="Onboarding sections">{"".join(nav)}</nav>
+
+          <div class="onb-main">
+            <div class="onb-done" data-onb-done hidden>
+              <span class="eyebrow">Submitted</span>
+              <h2>Thank you — we've got everything.</h2>
+              <p class="lede">Your onboarding is complete. We'll review it and be in touch within two working days to confirm next steps and your written proposal.</p>
+              <a class="btn btn-primary" href="{r}index.html">Back to the website</a>
+            </div>
+            <form name="client-onboarding" method="POST" action="/onboarding/" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" data-onb-form novalidate>
+              <input type="hidden" name="form-name" value="client-onboarding">
+              <p hidden><label>Leave blank <input name="bot-field"></label></p>
+              {"".join(panels)}
+              <div class="onb-error" data-onb-error role="alert" hidden></div>
+              <div class="onb-actions">
+                <button type="button" class="btn btn-ghost" data-onb-prev>Back</button>
+                <span class="onb-save-note">Progress saved automatically</span>
+                <button type="button" class="btn btn-primary" data-onb-next>Continue</button>
+                <button type="submit" class="btn btn-primary" data-onb-submit hidden>Submit Onboarding</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>'''
+
+    w("onboarding/index.html", page(
+        "Client Onboarding", "Complete your Lari Creative Studio client onboarding — Part A client profile and Part B project brief & agreement.",
+        depth, body, body_class="onb-page",
+        extra_head='<meta name="robots" content="noindex, nofollow">',
+    ))
+
+
+# ---------------------------------------------------------------------------
 # CLIENT GALLERY (demo password gate)
 # ---------------------------------------------------------------------------
 
@@ -1703,6 +1818,7 @@ def main():
     build_dashboard_certificates()
     build_dashboard_settings()
     build_contact()
+    build_onboarding()
     build_client_gallery()
     build_faq()
     build_legal_page("privacy", "Privacy Policy", PRIVACY_PARAGRAPHS)

@@ -739,3 +739,115 @@ ACADEMY_FAQS = [
     ("Will I get a certificate?", "The Ultimate guide tier and the Enterprise/Professional workshop tiers include a completion certificate. Self-paced Academy courses currently track progress on your dashboard; certificates for individual courses are on our roadmap."),
     ("Can my whole team enrol?", "Yes — for teams of five or more, contact us about a corporate training retainer instead of individual registrations; it includes a customised curriculum and on-site or virtual delivery."),
 ]
+
+
+# ---------------------------------------------------------------------------
+# CLIENT ONBOARDING (/onboarding — unlisted, shared directly with clients)
+# Part A = who the client is; Part B = what we're building together.
+# Field tuple: (name, label, type, required, options_or_placeholder, full_width)
+# types: text, email, tel, url, date, textarea, select, checkboxes, radios,
+#        file, consent
+# ---------------------------------------------------------------------------
+
+ONBOARDING_PARTS = [
+    {
+        "key": "A",
+        "title": "Part A — Client Profile",
+        "steps": [
+            {
+                "slug": "contact",
+                "title": "Contact Details",
+                "intro": "Who we'll be working with day to day.",
+                "fields": [
+                    ("full_name", "Full name", "text", True, "", False),
+                    ("job_title", "Role / Job title", "text", False, "", False),
+                    ("email", "Email", "email", True, "", False),
+                    ("phone", "Phone / WhatsApp", "tel", True, "", False),
+                    ("contact_method", "Preferred contact method", "select", True, ["Email", "WhatsApp", "Phone call", "Video call"], False),
+                    ("location", "City & country", "text", False, "e.g. Lagos, Nigeria", False),
+                ],
+            },
+            {
+                "slug": "business",
+                "title": "Business Profile",
+                "intro": "Tell us about the organisation behind the project.",
+                "fields": [
+                    ("business_name", "Business / Organisation name", "text", True, "", False),
+                    ("industry", "Industry", "text", True, "e.g. Hospitality, Fintech, NGO", False),
+                    ("website_url", "Current website", "url", False, "https://", False),
+                    ("social_handles", "Social media handles", "text", False, "@instagram, LinkedIn page…", False),
+                    ("business_stage", "Business stage", "select", True, ["Idea / pre-launch", "Under 1 year", "1–3 years", "3–10 years", "10+ years"], False),
+                    ("team_size", "Team size", "select", False, ["Just me", "2–10", "11–50", "51–200", "200+"], False),
+                    ("business_description", "What does your business do, and for whom?", "textarea", True, "", True),
+                ],
+            },
+            {
+                "slug": "brand",
+                "title": "Brand & Audience",
+                "intro": "How your brand shows up today, and who it needs to reach.",
+                "fields": [
+                    ("target_audience", "Who is your ideal customer?", "textarea", True, "Age, location, profession, what they care about…", True),
+                    ("brand_personality", "Three words that describe your brand", "text", False, "e.g. warm, premium, bold", False),
+                    ("competitors", "Main competitors or brands you admire", "text", False, "", False),
+                    ("existing_assets", "Brand assets you already have", "checkboxes", False, ["Logo", "Brand guidelines", "Photography", "Video", "Website", "Social media pages", "None yet"], True),
+                    ("brand_likes", "What do you like and dislike about your current brand or marketing?", "textarea", False, "", True),
+                ],
+            },
+        ],
+    },
+    {
+        "key": "B",
+        "title": "Part B — Project Brief & Agreement",
+        "steps": [
+            {
+                "slug": "scope",
+                "title": "Services & Scope",
+                "intro": "What you'd like us to deliver.",
+                "fields": [
+                    ("services", "Services required", "checkboxes", True, "__SERVICES__", True),
+                    ("package_tier", "Preferred package tier", "select", False, ["Essential", "Professional", "Enterprise", "Not sure — advise me", "Custom / bundle"], False),
+                    ("project_type", "Is this a…", "radios", True, ["New project", "Refresh / redesign", "Ongoing retainer"], False),
+                    ("project_goals", "What does success look like for this project?", "textarea", True, "Goals, KPIs, problems to solve…", True),
+                    ("deliverables", "Specific deliverables or must-haves", "textarea", False, "", True),
+                ],
+            },
+            {
+                "slug": "timeline",
+                "title": "Timeline & Budget",
+                "intro": "Helps us plan the right team and schedule.",
+                "fields": [
+                    ("start_date", "Ideal start date", "date", False, "", False),
+                    ("deadline", "Hard deadline (if any)", "date", False, "", False),
+                    ("deadline_reason", "What's driving the deadline?", "text", False, "Launch, event, campaign…", True),
+                    ("budget_currency", "Billing currency", "select", True, ["NGN (₦)", "USD ($)", "GBP (£)", "EUR (€)"], False),
+                    ("budget_range", "Estimated budget", "select", True, ["Under ₦500,000 / $500", "₦500,000 – ₦1.5M / $500 – $1,500", "₦1.5M – ₦5M / $1,500 – $5,000", "₦5M+ / $5,000+", "Not sure yet"], False),
+                ],
+            },
+            {
+                "slug": "logistics",
+                "title": "Access & Logistics",
+                "intro": "The practical details that keep the project moving.",
+                "fields": [
+                    ("decision_maker", "Who signs off on approvals?", "text", True, "Name and role", False),
+                    ("billing_contact", "Billing contact email", "email", False, "If different from yours", False),
+                    ("shared_files", "Link to existing files", "url", False, "Google Drive, Dropbox…", True),
+                    ("attachment", "Upload a file (brief, logo, brand guide — max 8 MB)", "file", False, "", True),
+                    ("access_notes", "Access we'll need (website login, social accounts, venue, etc.)", "textarea", False, "Please don't paste passwords here — we'll arrange secure handover.", True),
+                ],
+            },
+            {
+                "slug": "agreement",
+                "title": "Agreement",
+                "intro": "Please confirm the working terms below.",
+                "fields": [
+                    ("agree_proposal", "I understand that quotations are starting points, and the final scope and price are confirmed in a written proposal.", "consent", True, "", True),
+                    ("agree_ownership", "I understand that creative work remains the property of Lari Creative Studio until full payment is received.", "consent", True, "", True),
+                    ("agree_retainer", "For retainer services, I understand there is a 3-month minimum commitment, billed monthly.", "consent", False, "", True),
+                    ("agree_privacy", "I agree to my information being used to deliver this project, as described in the Privacy Policy.", "consent", True, "", True),
+                    ("signature", "Type your full name as your signature", "text", True, "", False),
+                    ("signature_date", "Date", "date", True, "", False),
+                ],
+            },
+        ],
+    },
+]
